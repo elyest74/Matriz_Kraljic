@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Matriz de Kraljic – Elymar Estévez</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{--navy:#f0f4f8;--navy2:#e2eaf3;--blue:#dce8f5;--blue2:#c8daf0;--accent:#2563eb;--accent2:#1d4ed8;--gold:#d97706;--teal:#0284c7;--green:#059669;--red:#dc2626;--border:#b8d0e8;--text:#1e3a5f;--text2:#4a6fa5;--white:#ffffff;--card:#ffffff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--navy);color:var(--text);min-height:100vh;}
+header{background:linear-gradient(135deg,#1e3a6e,#2563eb);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a3460;box-shadow:0 2px 20px rgba(37,99,235,.2);}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-icon{width:40px;height:40px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.logo h1{font-size:1.25rem;font-weight:700;color:#fff;}
+.logo p{font-size:.7rem;color:rgba(255,255,255,.75);margin-top:2px;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.lang-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.8rem;transition:all .2s;}
+.lang-btn.active{background:#fff;color:var(--accent);border-color:#fff;font-weight:700;}
+.credit{font-size:.7rem;color:rgba(255,255,255,.8);text-align:right;line-height:1.4;}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);padding:0 28px;}
+.tab{padding:13px 20px;cursor:pointer;font-size:.84rem;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-2px;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab:hover:not(.active){color:var(--text);}
+main{padding:22px 28px;max-width:1400px;margin:0 auto;}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:18px;box-shadow:0 2px 10px rgba(37,99,235,.06);}
+.card-title{font-size:.85rem;font-weight:700;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.05em;}
+label{font-size:.8rem;color:var(--text2);display:block;margin-bottom:4px;}
+select,input[type=text]{width:100%;background:#fff;border:1px solid var(--border);color:var(--text);padding:8px 11px;border-radius:8px;font-size:.84rem;outline:none;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+select:focus,input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+select option{background:#fff;color:var(--text);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.btn{padding:8px 16px;border-radius:8px;border:none;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--teal));color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.3);}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+.btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.btn-secondary:hover{background:var(--blue);border-color:var(--accent);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#b45309);color:#fff;}
+.btn-green{background:linear-gradient(135deg,var(--green),#047857);color:#fff;}
+.btn-sm{padding:5px 11px;font-size:.77rem;}
+.data-table{width:100%;border-collapse:collapse;font-size:.81rem;}
+.data-table th{background:var(--navy2);color:var(--text2);padding:9px 11px;text-align:left;font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;}
+.data-table td{padding:8px 11px;border-bottom:1px solid var(--border);}
+.data-table tr:hover td{background:var(--blue);}
+.data-table input[type=text]{width:100%;background:transparent;border:1px solid transparent;color:var(--text);padding:4px 6px;border-radius:4px;font-size:.81rem;box-shadow:none;}
+.data-table input[type=text]:focus{border-color:var(--accent);background:#fff;outline:none;}
+.score-chip{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700;min-width:32px;text-align:center;}
+.chip-high{background:rgba(220,38,38,.1);color:#b91c1c;}
+.chip-mid{background:rgba(217,119,6,.1);color:#92400e;}
+.chip-low{background:rgba(5,150,105,.1);color:#065f46;}
+.quadrant-pill{display:inline-block;padding:3px 9px;border-radius:10px;font-size:.72rem;font-weight:700;}
+.pill-strategic{background:rgba(37,99,235,.12);color:#1d4ed8;}
+.pill-leverage{background:rgba(5,150,105,.12);color:#065f46;}
+.pill-bottleneck{background:rgba(217,119,6,.12);color:#92400e;}
+.pill-noncritical{background:rgba(100,116,139,.12);color:#374151;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:15px 17px;box-shadow:0 2px 8px rgba(37,99,235,.07);}
+.kpi-label{font-size:.7rem;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.kpi-value{font-size:1.55rem;font-weight:800;color:var(--text);}
+.kpi-sub{font-size:.68rem;color:var(--text2);margin-top:2px;}
+.m-cell{border-radius:10px;padding:14px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:transform .2s;}
+.m-cell:hover{transform:scale(1.01);z-index:2;}
+.cell-strategic{background:linear-gradient(135deg,#1d4ed8,#1e40af);border:1px solid rgba(59,130,246,.4);}
+.cell-leverage{background:linear-gradient(135deg,#065f46,#047857);border:1px solid rgba(16,185,129,.4);}
+.cell-bottleneck{background:linear-gradient(135deg,#92400e,#b45309);border:1px solid rgba(245,158,11,.4);}
+.cell-noncritical{background:linear-gradient(135deg,#334155,#475569);border:1px solid rgba(148,163,184,.3);}
+.cell-title{font-size:.95rem;font-weight:800;color:#fff;}
+.cell-subtitle{font-size:.68rem;color:rgba(255,255,255,.7);margin-top:2px;}
+.cell-icon{font-size:1.6rem;margin-bottom:6px;}
+.cell-items{margin-top:8px;flex:1;overflow-y:auto;max-height:160px;}
+.cell-item{background:rgba(255,255,255,.15);border-radius:5px;padding:4px 8px;margin-bottom:4px;font-size:.7rem;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:6px;}
+.item-spend{font-size:.66rem;color:rgba(255,255,255,.7);white-space:nowrap;}
+.rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.rec-card{border-radius:10px;padding:15px;border:1px solid;}
+.rec-strategic{background:rgba(37,99,235,.05);border-color:rgba(37,99,235,.2);}
+.rec-leverage{background:rgba(5,150,105,.05);border-color:rgba(5,150,105,.2);}
+.rec-bottleneck{background:rgba(217,119,6,.05);border-color:rgba(217,119,6,.2);}
+.rec-noncritical{background:rgba(100,116,139,.05);border-color:rgba(100,116,139,.15);}
+.rec-title{font-size:.84rem;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.rec-items{list-style:none;}
+.rec-items li{font-size:.76rem;color:var(--text2);padding:4px 0 4px 14px;position:relative;border-bottom:1px solid var(--border);}
+.rec-items li::before{content:'→';position:absolute;left:0;color:var(--accent);}
+.action-badge{display:inline-block;font-size:.63rem;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:5px;}
+.badge-urgent{background:rgba(220,38,38,.1);color:#b91c1c;}
+.badge-short{background:rgba(217,119,6,.1);color:#92400e;}
+.badge-mid{background:rgba(5,150,105,.1);color:#065f46;}
+.client-item{background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;transition:all .2s;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.client-item:hover{border-color:var(--accent);background:var(--blue);}
+.client-name-lbl{font-size:.84rem;font-weight:600;color:var(--text);}
+.client-meta{font-size:.7rem;color:var(--text2);margin-top:2px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(30,58,95,.4);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border:1px solid var(--border);border-radius:16px;padding:26px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(30,58,95,.2);}
+.modal h3{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:14px;}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+.info-box{background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:8px;padding:12px 14px;font-size:.78rem;color:var(--text2);margin-bottom:14px;line-height:1.6;}
+.info-box strong{color:var(--accent);}
+.section{display:none;}.section.active{display:block;}
+.flex{display:flex;align-items:center;gap:10px;}.flex-end{justify-content:flex-end;}.flex-wrap{flex-wrap:wrap;}
+.mt8{margin-top:8px;}.mt14{margin-top:14px;}
+.no-data{text-align:center;padding:36px;color:var(--text2);font-size:.84rem;}
+footer{text-align:center;padding:16px;font-size:.7rem;color:var(--text2);border-top:1px solid var(--border);margin-top:18px;background:#fff;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--navy);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+.mode-card{border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;border:2px solid var(--border);background:#fff;}
+.mode-card.selected{border-color:var(--accent);background:rgba(37,99,235,.05);}
+.mode-card:hover:not(.selected){border-color:var(--blue2);background:var(--blue);}
+.mode-icon{font-size:1.5rem;margin-bottom:8px;}
+.mode-title{font-weight:700;font-size:.88rem;color:var(--text);}
+.mode-desc{font-size:.74rem;color:var(--text2);margin-top:4px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⬡</div>
+    <div>
+      <h1 id="h-title">Matriz de Kraljic</h1>
+      <p id="h-sub">Herramienta de Análisis de Compras Estratégicas</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="lang-btn active" onclick="setLang('es')" id="btn-es">ES</button>
+    <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+    <div class="credit" id="credit-txt">Creado por<br><strong>Elymar Estévez</strong></div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showSection('setup')" id="tab-setup">⚙ Configuración</div>
+  <div class="tab" onclick="showSection('data')" id="tab-data">📊 Datos</div>
+  <div class="tab" onclick="showSection('matrix')" id="tab-matrix">🔲 Matriz</div>
+  <div class="tab" onclick="showSection('clients')" id="tab-clients">👥 Clientes</div>
+</div>
+
+<main>
+<!-- SETUP -->
+<div class="section active" id="section-setup">
+  <div class="card">
+    <div class="card-title">🏢 <span id="lbl-client-info">Información del Cliente</span></div>
+    <div class="grid2">
+      <div><label id="lbl-client-name">Nombre del Cliente / Empresa</label><input type="text" id="client-name" placeholder="Ej: Empresa ABC"></div>
+      <div>
+        <label id="lbl-sector">Sector de la Empresa</label>
+        <select id="sector-select">
+          <option value="">-- Seleccionar --</option>
+          <option value="manufactura">Manufactura / Industria</option>
+          <option value="retail">Retail / Comercio</option>
+          <option value="salud">Salud / Farmacia</option>
+          <option value="it">Tecnología / IT</option>
+          <option value="construccion">Construcción / Infraestructura</option>
+          <option value="servicios">Servicios / Consultoría</option>
+          <option value="alimentacion">Alimentación / Agroindustria</option>
+          <option value="energia">Energía / Utilities</option>
+        </select>
+      </div>
+      <div><label id="lbl-analyst">Analista / Consultor</label><input type="text" id="analyst-name" value="Elymar Estévez"></div>
+      <div><label id="lbl-date">Fecha del Análisis</label><input type="text" id="analysis-date"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📂 <span id="lbl-input-mode">Modo de Entrada de Datos</span></div>
+    <div class="info-box"><strong id="info-title">Puntuación automática:</strong> <span id="info-desc">La aplicación calcula el Impacto en Negocio y el Riesgo de Suministro automáticamente. Solo necesitas el nombre y el gasto.</span></div>
+    <div class="grid2">
+      <div class="mode-card selected" onclick="setMode('category')" id="mode-cat">
+        <div class="mode-icon">🗂</div><div class="mode-title" id="mode-cat-title">Por Categoría</div>
+        <div class="mode-desc" id="mode-cat-desc">Introduce categorías de compra con su gasto anual.</div>
+      </div>
+      <div class="mode-card" onclick="setMode('supplier')" id="mode-sup">
+        <div class="mode-icon">🏭</div><div class="mode-title" id="mode-sup-title">Por Proveedor</div>
+        <div class="mode-desc" id="mode-sup-desc">Introduce proveedores con su gasto. La app categoriza automáticamente.</div>
+      </div>
+    </div>
+    <div class="mt14 flex flex-end"><button class="btn btn-primary" onclick="goToData()" id="btn-next">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- DATA -->
+<div class="section" id="section-data">
+  <div class="card">
+    <div class="card-title" id="data-card-title">📋 Datos</div>
+    <div class="info-box" id="info-box-data">✅ Solo introduce el <strong>nombre</strong> y el <strong>gasto anual</strong>. El sistema calcula automáticamente el <strong>Impacto</strong> y el <strong>Riesgo</strong>.</div>
+    <div class="flex flex-wrap mt8" style="gap:8px;margin-bottom:14px;">
+      <button class="btn btn-secondary btn-sm" onclick="addRow()" id="btn-add-row">+ Añadir fila</button>
+      <button class="btn btn-secondary btn-sm" onclick="downloadTemplate()" id="btn-dl-tmpl">⬇ Descargar plantilla Excel</button>
+      <label class="btn btn-secondary btn-sm" style="cursor:pointer">📤 <span id="btn-upload-excel">Cargar Excel</span><input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="uploadExcel(this)"></label>
+    </div>
+    <table class="data-table">
+      <thead><tr><th id="th-name">Categoría / Nombre</th><th id="th-spend">Gasto Anual (€)</th><th style="width:40px">—</th></tr></thead>
+      <tbody id="cat-tbody"></tbody>
+    </table>
+    <div class="mt14 flex flex-end"><button class="btn btn-primary" onclick="generateMatrix()" id="btn-gen">🔲 Generar Matriz</button></div>
+  </div>
+</div>
+
+<!-- MATRIX -->
+<div class="section" id="section-matrix">
+  <div class="kpi-row" id="kpi-row"></div>
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <span>🔲 <span id="lbl-matrix">Matriz de Kraljic</span> – <span id="matrix-client-name" style="color:var(--gold)"></span></span>
+      <div class="flex" style="gap:8px;">
+        <button class="btn btn-gold btn-sm" onclick="exportPDF()" id="btn-pdf">⬇ PDF</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportPNG()" id="btn-png">🖼 PNG</button>
+        <button class="btn btn-green btn-sm" onclick="saveClient()">💾 <span id="btn-save-lbl">Guardar</span></button>
+      </div>
+    </div>
+    <div id="matrix-printable">
+      <div style="padding:4px 2px 12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <span style="background:rgba(37,99,235,.1);color:var(--accent);padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;" id="matrix-sector-badge"></span>
+          <span style="font-size:.73rem;color:var(--text2)" id="matrix-date-badge"></span>
+        </div>
+        <span style="font-size:.72rem;color:var(--text2)" id="matrix-analyst-badge"></span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:32px;padding-bottom:44px;">
+          <div style="font-size:.65rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;" id="ylabel">RIESGO DE SUMINISTRO ▲</div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;height:420px;">
+            <div class="m-cell cell-bottleneck"><div><div class="cell-icon">⚠️</div><div class="cell-title" id="ct-bottleneck">Cuello de Botella</div><div class="cell-subtitle" id="cs-bottleneck">Alto riesgo · Bajo impacto</div></div><div class="cell-items" id="items-bottleneck"></div></div>
+            <div class="m-cell cell-strategic"><div><div class="cell-icon">⭐</div><div class="cell-title" id="ct-strategic">Estratégico</div><div class="cell-subtitle" id="cs-strategic">Alto riesgo · Alto impacto</div></div><div class="cell-items" id="items-strategic"></div></div>
+            <div class="m-cell cell-noncritical"><div><div class="cell-icon">📦</div><div class="cell-title" id="ct-noncritical">No Crítico</div><div class="cell-subtitle" id="cs-noncritical">Bajo riesgo · Bajo impacto</div></div><div class="cell-items" id="items-noncritical"></div></div>
+            <div class="m-cell cell-leverage"><div><div class="cell-icon">💪</div><div class="cell-title" id="ct-leverage">Apalancamiento</div><div class="cell-subtitle" id="cs-leverage">Bajo riesgo · Alto impacto</div></div><div class="cell-items" id="items-leverage"></div></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 0;gap:6px;">
+            <span style="font-size:.65rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em" id="xlabel-low">BAJO IMPACTO</span>
+            <div style="flex:1;height:2px;background:var(--border);position:relative;"><span style="position:absolute;right:-5px;top:-7px;font-size:.65rem;color:var(--text2)">▶</span></div>
+            <span style="font-size:.65rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em" id="xlabel">IMPACTO EN NEGOCIO</span>
+            <div style="flex:1;height:2px;background:var(--border);"></div>
+            <span style="font-size:.65rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em" id="xlabel-high">ALTO IMPACTO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCATTER -->
+  <div class="card">
+    <div class="card-title">📈 <span id="lbl-scatter">Gráfico de Dispersión – Gasto vs Riesgo & Complejidad</span></div>
+    <div style="position:relative;width:100%;height:520px;background:#fff;border-radius:8px;" id="scatter-wrap">
+      <canvas id="scatter-canvas" style="display:block;"></canvas>
+    </div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;justify-content:center;">
+      <span style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--text2)"><span style="width:11px;height:11px;border-radius:50%;background:#2563eb;display:inline-block"></span><span id="leg-strategic">Estratégico</span></span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--text2)"><span style="width:11px;height:11px;border-radius:50%;background:#059669;display:inline-block"></span><span id="leg-leverage">Apalancamiento</span></span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--text2)"><span style="width:11px;height:11px;border-radius:50%;background:#d97706;display:inline-block"></span><span id="leg-bottleneck">Cuello de Botella</span></span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--text2)"><span style="width:11px;height:11px;border-radius:50%;background:#64748b;display:inline-block"></span><span id="leg-noncritical">No Crítico</span></span>
+    </div>
+  </div>
+
+  <!-- SCORE TABLE -->
+  <div class="card">
+    <div class="card-title">📊 <span id="lbl-score-table">Detalle de Puntuaciones</span></div>
+    <table class="data-table">
+      <thead><tr><th id="sth-name">Nombre</th><th id="sth-inferred">Categoría Inferida</th><th id="sth-spend">Gasto</th><th id="sth-impact">Impacto</th><th id="sth-risk">Riesgo</th><th id="sth-quadrant">Cuadrante</th></tr></thead>
+      <tbody id="score-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- RECS -->
+  <div class="card">
+    <div class="card-title">💡 <span id="lbl-recs">Recomendaciones y Planes de Acción</span></div>
+    <div class="rec-grid" id="rec-grid"></div>
+  </div>
+</div>
+
+<!-- CLIENTS -->
+<div class="section" id="section-clients">
+  <div class="card">
+    <div class="card-title">👥 <span id="lbl-saved-clients">Clientes Guardados</span></div>
+    <div id="client-list-wrap"><div class="no-data">No hay clientes guardados aún.</div></div>
+  </div>
+</div>
+</main>
+
+<footer>Matriz de Kraljic · Herramienta de Análisis de Compras Estratégicas · Creado por <strong>Elymar Estévez</strong></footer>
+
+<div class="modal-overlay" id="modal-save">
+  <div class="modal">
+    <h3>💾 Guardar Análisis</h3>
+    <p style="font-size:.8rem;color:var(--text2);margin-bottom:13px">El análisis se guardará en este navegador.</p>
+    <div><label>Nombre del cliente</label><input type="text" id="modal-client-input"></div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmSave()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let lang='es', inputMode='category', matrixData=[], clients={};
+
+const T={
+  es:{'h-title':'Matriz de Kraljic','h-sub':'Herramienta de Análisis de Compras Estratégicas','credit-txt':'Creado por<br><strong>Elymar Estévez</strong>','tab-setup':'⚙ Configuración','tab-data':'📊 Datos','tab-matrix':'🔲 Matriz','tab-clients':'👥 Clientes','lbl-client-info':'Información del Cliente','lbl-client-name':'Nombre del Cliente / Empresa','lbl-sector':'Sector de la Empresa','lbl-analyst':'Analista / Consultor','lbl-date':'Fecha del Análisis','lbl-input-mode':'Modo de Entrada','info-title':'Puntuación automática:','info-desc':'La app calcula Impacto y Riesgo automáticamente. Solo nombre y gasto.','mode-cat-title':'Por Categoría','mode-cat-desc':'Introduce categorías con su gasto anual.','mode-sup-title':'Por Proveedor','mode-sup-desc':'Introduce proveedores con su gasto.','btn-next':'Siguiente →','data-card-title':'📋 Datos','info-box-data':'✅ Solo introduce el <strong>nombre</strong> y el <strong>gasto anual</strong>.','btn-add-row':'+ Añadir fila','btn-dl-tmpl':'⬇ Descargar plantilla Excel','btn-upload-excel':'Cargar Excel','th-name':'Categoría / Nombre','th-spend':'Gasto Anual (€)','btn-gen':'🔲 Generar Matriz','lbl-matrix':'Matriz de Kraljic','btn-save-lbl':'Guardar','ylabel':'RIESGO DE SUMINISTRO ▲','xlabel':'IMPACTO EN NEGOCIO','xlabel-low':'BAJO IMPACTO','xlabel-high':'ALTO IMPACTO','ct-bottleneck':'Cuello de Botella','cs-bottleneck':'Alto riesgo · Bajo impacto','ct-strategic':'Estratégico','cs-strategic':'Alto riesgo · Alto impacto','ct-noncritical':'No Crítico','cs-noncritical':'Bajo riesgo · Bajo impacto','ct-leverage':'Apalancamiento','cs-leverage':'Bajo riesgo · Alto impacto','lbl-scatter':'Gráfico de Dispersión – Gasto vs Riesgo & Complejidad','leg-strategic':'Estratégico','leg-leverage':'Apalancamiento','leg-bottleneck':'Cuello de Botella','leg-noncritical':'No Crítico','lbl-score-table':'Detalle de Puntuaciones','sth-name':'Nombre','sth-inferred':'Categoría Inferida','sth-spend':'Gasto','sth-impact':'Impacto','sth-risk':'Riesgo','sth-quadrant':'Cuadrante','lbl-recs':'Recomendaciones y Planes de Acción','lbl-saved-clients':'Clientes Guardados','btn-pdf':'⬇ PDF','btn-png':'🖼 PNG'},
+  en:{'h-title':'Kraljic Matrix','h-sub':'Strategic Purchasing Analysis Tool','credit-txt':'Created by<br><strong>Elymar Estévez</strong>','tab-setup':'⚙ Setup','tab-data':'📊 Data','tab-matrix':'🔲 Matrix','tab-clients':'👥 Clients','lbl-client-info':'Client Information','lbl-client-name':'Client / Company Name','lbl-sector':'Business Sector','lbl-analyst':'Analyst / Consultant','lbl-date':'Analysis Date','lbl-input-mode':'Input Mode','info-title':'Automatic scoring:','info-desc':'The app calculates Impact and Risk automatically.','mode-cat-title':'By Category','mode-cat-desc':'Enter categories with their annual spend.','mode-sup-title':'By Supplier','mode-sup-desc':'Enter suppliers with spend.','btn-next':'Next →','data-card-title':'📋 Data','info-box-data':'✅ Just enter <strong>name</strong> and <strong>annual spend</strong>.','btn-add-row':'+ Add row','btn-dl-tmpl':'⬇ Download Excel template','btn-upload-excel':'Upload Excel','th-name':'Category / Name','th-spend':'Annual Spend (€)','btn-gen':'🔲 Generate Matrix','lbl-matrix':'Kraljic Matrix','btn-save-lbl':'Save','ylabel':'SUPPLY RISK ▲','xlabel':'BUSINESS IMPACT','xlabel-low':'LOW IMPACT','xlabel-high':'HIGH IMPACT','ct-bottleneck':'Bottleneck','cs-bottleneck':'High risk · Low impact','ct-strategic':'Strategic','cs-strategic':'High risk · High impact','ct-noncritical':'Non-Critical','cs-noncritical':'Low risk · Low impact','ct-leverage':'Leverage','cs-leverage':'Low risk · High impact','lbl-scatter':'Scatter Chart – Spend vs Risk & Complexity','leg-strategic':'Strategic','leg-leverage':'Leverage','leg-bottleneck':'Bottleneck','leg-noncritical':'Non-Critical','lbl-score-table':'Score Detail','sth-name':'Name','sth-inferred':'Inferred Category','sth-spend':'Spend','sth-impact':'Impact','sth-risk':'Risk','sth-quadrant':'Quadrant','lbl-recs':'Recommendations & Action Plans','lbl-saved-clients':'Saved Clients','btn-pdf':'⬇ PDF','btn-png':'🖼 PNG'}
+};
+
+function setLang(l){lang=l;document.getElementById('btn-es').classList.toggle('active',l==='es');document.getElementById('btn-en').classList.toggle('active',l==='en');Object.keys(T[l]).forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML=T[l][k];});}
+function showSection(s){document.querySelectorAll('.section').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));document.getElementById('section-'+s).classList.add('active');document.getElementById('tab-'+s).classList.add('active');}
+function goToData(){showSection('data');}
+function setMode(m){inputMode=m;['cat','sup'].forEach(id=>document.getElementById('mode-'+id).classList.toggle('selected',(id==='cat'&&m==='category')||(id==='sup'&&m==='supplier')));}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('analysis-date').value=new Date().toLocaleDateString('es-ES');
+  loadClients(); addRow();addRow();addRow();addRow();
+});
+
+function addRow(name='',spend=''){
+  const tbody=document.getElementById('cat-tbody');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="text" placeholder="Ej: Materia prima, Logística…" value="${name}"></td><td><input type="text" placeholder="0" value="${spend}" style="max-width:140px"></td><td><button class="btn btn-secondary btn-sm" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function downloadTemplate(){
+  const sector=document.getElementById('sector-select').value||'general';
+  const ex=getExamples(sector);
+  const ws_data=[['Categoría','Gasto Anual (€)'],...ex.map(e=>[e.name,e.spend])];
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols']=[{wch:32},{wch:20}];XLSX.utils.book_append_sheet(wb,ws,'Kraljic');XLSX.writeFile(wb,`Kraljic_${sector}.xlsx`);
+}
+function getExamples(s){
+  const d={manufactura:[{name:'Materia prima principal',spend:500000},{name:'Componentes mecánicos',spend:250000},{name:'Maquinaria CNC',spend:300000},{name:'Mantenimiento MRO',spend:120000},{name:'Embalaje',spend:80000},{name:'Logística',spend:150000},{name:'Suministros oficina',spend:20000}],retail:[{name:'Producto estrella A',spend:400000},{name:'Producto estrella B',spend:300000},{name:'Packaging premium',spend:100000},{name:'Sistemas POS',spend:80000},{name:'Merchandising',spend:50000},{name:'Suministros tienda',spend:25000}],salud:[{name:'Medicamentos críticos',spend:600000},{name:'Equipos médicos',spend:400000},{name:'Reactivos diagnóstico',spend:200000},{name:'Desechables médicos',spend:150000},{name:'Servicios limpieza',spend:80000},{name:'Material administrativo',spend:15000}],it:[{name:'Licencias software crítico',spend:500000},{name:'Infraestructura cloud',spend:400000},{name:'Hardware especializado',spend:300000},{name:'Ciberseguridad',spend:200000},{name:'Soporte técnico',spend:150000},{name:'Material oficina',spend:30000}],construccion:[{name:'Acero estructural',spend:800000},{name:'Cemento y hormigón',spend:600000},{name:'Maquinaria pesada',spend:500000},{name:'Servicios especializados',spend:300000},{name:'Materiales acabado',spend:200000},{name:'EPIs seguridad',spend:80000}],servicios:[{name:'Talento especializado',spend:700000},{name:'Software gestión',spend:200000},{name:'Formación',spend:100000},{name:'Marketing digital',spend:150000},{name:'Suministros oficina',spend:30000}],alimentacion:[{name:'Materias primas críticas',spend:700000},{name:'Envases alimentarios',spend:200000},{name:'Maquinaria proceso',spend:400000},{name:'Aditivos conservantes',spend:150000},{name:'Logística refrigerada',spend:180000},{name:'Material limpieza',spend:40000}],energia:[{name:'Turbinas Generadores',spend:1000000},{name:'Cableado especializado',spend:500000},{name:'Sistemas SCADA',spend:400000},{name:'Mantenimiento predictivo',spend:300000},{name:'EPIs seguridad',spend:100000},{name:'Suministros generales',spend:40000}]};
+  return d[s]||[{name:'Categoría 1',spend:100000},{name:'Categoría 2',spend:50000}];
+}
+function uploadExcel(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{const wb=XLSX.read(e.target.result,{type:'binary'});const ws=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(ws,{header:1});document.getElementById('cat-tbody').innerHTML='';for(let i=1;i<data.length;i++){const r=data[i];if(!r||!r[0])continue;addRow(r[0]||'',r[1]||'');}};
+  reader.readAsBinaryString(file);
+}
+
+const RULES=[
+  [['materia prima','insumo','commodity','mineral','metal','acero','aluminio','cobre','plastico','resina'],9,7,'Materia Prima','Raw Material'],
+  [['medicamento','fármaco','vacuna','reactivo','reagent','biologico','diagnóstico','diagnostic'],10,9,'Medicamento / Reactivo','Drug / Reagent'],
+  [['maquinaria','equipamiento','equipo','machinery','equipment','turbina','generador','generator','cnc','robot','automatización'],8,7,'Maquinaria / Equipo','Machinery / Equipment'],
+  [['software','licencia','license','saas','erp','crm','cloud','nube','plataforma','sistema'],8,8,'Software / Tecnología','Software / Technology'],
+  [['ciberseguridad','cybersecurity','seguridad it','firewall','antivirus','siem'],9,9,'Ciberseguridad','Cybersecurity'],
+  [['hardware','servidor','server','ordenador','computer','dispositivo','network','telecomunicaciones'],7,6,'Hardware / Infraestructura','Hardware / Infrastructure'],
+  [['logística','logistic','transporte','transport','flete','freight','distribución','warehouse','courier'],6,5,'Logística / Transporte','Logistics / Transport'],
+  [['energía','energia','electricidad','electricity','gas natural','combustible','fuel','utilities'],7,7,'Energía / Utilities','Energy / Utilities'],
+  [['embalaje','packaging','envase','container','caja','botella','etiqueta'],5,4,'Embalaje / Packaging','Packaging'],
+  [['mantenimiento','maintenance','mro','repuesto','spare','pieza','reparación'],5,6,'Mantenimiento / MRO','Maintenance / MRO'],
+  [['consultoría','consulting','asesoría','advisory','outsourcing','servicios profesionales'],6,5,'Servicios Profesionales','Professional Services'],
+  [['talento','talent','personal','staff','rrhh','hr','recursos humanos','formación','training'],7,6,'Talento / RRHH','Talent / HR'],
+  [['marketing','publicidad','advertising','comunicación','marca','brand','digital','campaña'],5,3,'Marketing / Publicidad','Marketing / Advertising'],
+  [['construcción','construction','obra','hormigón','concrete','cemento','cement'],8,7,'Construcción / Infraestructura','Construction / Infrastructure'],
+  [['producto','product','mercancía','merchandise','artículo','sku','inventario','stock'],7,5,'Producto Comercial','Commercial Product'],
+  [['equipo médico','medical equipment','instrumental','medical device','implante','ortopedia'],9,8,'Equipo Médico','Medical Equipment'],
+  [['alimento','food','ingrediente','ingredient','cereal','trigo','maíz','soja','carne','leche','fruta','verdura'],8,7,'Alimentación / Ingrediente','Food / Ingredient'],
+  [['scada','plc','instrumentación','instrumentation','sensor','automatización industrial'],9,8,'Automatización Industrial','Industrial Automation'],
+  [['suministro','supply','oficina','office','papelería','tóner','papel','limpieza','higiene'],2,1,'Suministros Generales','General Supplies'],
+  [['seguridad','safety','epi','ppe','protección','señalización'],4,2,'Seguridad / EPIs','Safety / PPE'],
+];
+const SECTOR_MOD={manufactura:{raw:1,machinery:1,mro:1,energy:1},retail:{product:2,logistics:1,packaging:1},salud:{drug:1,medical:1,reagent:1,cyber:1},it:{software:1,cyber:2,hardware:1},construccion:{construction:1,machinery:1,steel:1},servicios:{talent:2,consulting:1,software:1},alimentacion:{food:2,packaging:1,logistics:1,ingredient:1},energia:{scada:1,machinery:1,energy:1,automation:1}};
+
+function scoreItem(name,spend,totalSpend,sector){
+  const nl=(name||'').toLowerCase();
+  let impact=4,risk=4,inferredEs='Otros',inferredEn='Others';
+  for(const [kws,bi,br,les,len] of RULES){if(kws.some(k=>nl.includes(k))){impact=bi;risk=br;inferredEs=les;inferredEn=len;break;}}
+  const mods=SECTOR_MOD[sector]||{};const inf=inferredEs.toLowerCase();
+  for(const[k,b] of Object.entries(mods)){if(inf.includes(k)||nl.includes(k)){risk=Math.min(10,risk+b);impact=Math.min(10,impact+Math.ceil(b*.5));}}
+  if(totalSpend>0){const p=spend/totalSpend;if(p>.3)impact=Math.min(10,impact+2);else if(p>.2)impact=Math.min(10,impact+1);else if(p<.02)impact=Math.max(1,impact-1);}
+  return{impact:Math.round(impact),risk:Math.round(risk),inferredEs,inferredEn};
+}
+
+function generateMatrix(){
+  const sector=document.getElementById('sector-select').value;
+  if(!sector){alert('Selecciona el sector primero.');return;}
+  const rows=document.querySelectorAll('#cat-tbody tr');
+  const raw=[];
+  rows.forEach(tr=>{const ins=tr.querySelectorAll('input');const n=(ins[0].value||'').trim();const s=parseFloat((ins[1].value||'0').replace(/[^0-9.]/g,''))||0;if(n)raw.push({name:n,spend:s});});
+  if(!raw.length){alert('Añade al menos un elemento.');return;}
+  const total=raw.reduce((s,d)=>s+d.spend,0);
+  matrixData=raw.map(d=>{
+    const sc=scoreItem(d.name,d.spend,total,sector);
+    const hi=sc.impact>=5.5,hr=sc.risk>=5.5;
+    const q=hi&&hr?'strategic':!hi&&hr?'bottleneck':hi&&!hr?'leverage':'noncritical';
+    return{...d,...sc,quadrant:q};
+  });
+  renderMatrix();renderKPIs();renderScoreTable();renderRecommendations();
+  showSection('matrix');
+  setTimeout(()=>renderScatter(),150);
+}
+
+function renderMatrix(){
+  const sMap={manufactura:'Manufactura',retail:'Retail',salud:'Salud/Farmacia',it:'Tecnología/IT',construccion:'Construcción',servicios:'Servicios',alimentacion:'Alimentación',energia:'Energía'};
+  const sector=document.getElementById('sector-select').value;
+  document.getElementById('matrix-client-name').textContent=document.getElementById('client-name').value||'—';
+  document.getElementById('matrix-sector-badge').textContent=sMap[sector]||sector;
+  document.getElementById('matrix-date-badge').textContent=document.getElementById('analysis-date').value;
+  document.getElementById('matrix-analyst-badge').textContent='Analista: '+document.getElementById('analyst-name').value;
+  ['strategic','bottleneck','leverage','noncritical'].forEach(q=>{
+    const el=document.getElementById('items-'+q);
+    const items=matrixData.filter(d=>d.quadrant===q).sort((a,b)=>b.spend-a.spend);
+    el.innerHTML=items.length?items.map(i=>`<div class="cell-item"><span>${i.name}</span><span class="item-spend">${fmt(i.spend)}</span></div>`).join(''):`<div style="font-size:.7rem;color:rgba(255,255,255,.4);font-style:italic">Sin elementos</div>`;
+  });
+}
+
+function renderKPIs(){
+  const total=matrixData.reduce((s,d)=>s+d.spend,0);
+  const byQ=q=>matrixData.filter(d=>d.quadrant===q);
+  document.getElementById('kpi-row').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Gasto Total</div><div class="kpi-value">${fmt(total)}</div><div class="kpi-sub">${matrixData.length} elementos</div></div>
+    <div class="kpi"><div class="kpi-label">⭐ Estratégico</div><div class="kpi-value" style="color:#1d4ed8">${byQ('strategic').length}</div><div class="kpi-sub">${fmt(byQ('strategic').reduce((s,d)=>s+d.spend,0))}</div></div>
+    <div class="kpi"><div class="kpi-label">💪 Apalancamiento</div><div class="kpi-value" style="color:#065f46">${byQ('leverage').length}</div><div class="kpi-sub">${fmt(byQ('leverage').reduce((s,d)=>s+d.spend,0))}</div></div>
+    <div class="kpi"><div class="kpi-label">⚠️ Cuello Botella</div><div class="kpi-value" style="color:#92400e">${byQ('bottleneck').length}</div><div class="kpi-sub">${fmt(byQ('bottleneck').reduce((s,d)=>s+d.spend,0))}</div></div>`;
+}
+
+function renderScoreTable(){
+  const qL={strategic:'Estratégico',leverage:'Apalancamiento',bottleneck:'Cuello de Botella',noncritical:'No Crítico'};
+  const qC={strategic:'pill-strategic',leverage:'pill-leverage',bottleneck:'pill-bottleneck',noncritical:'pill-noncritical'};
+  const cc=v=>v>=7?'chip-high':v>=4?'chip-mid':'chip-low';
+  document.getElementById('score-tbody').innerHTML=matrixData.map(d=>`<tr><td>${d.name}</td><td style="font-size:.72rem;color:var(--text2)">${d.inferredEs}</td><td>${fmt(d.spend)}</td><td><span class="score-chip ${cc(d.impact)}">${d.impact}/10</span></td><td><span class="score-chip ${cc(d.risk)}">${d.risk}/10</span></td><td><span class="quadrant-pill ${qC[d.quadrant]}">${qL[d.quadrant]}</span></td></tr>`).join('');
+}
+
+function renderScatter(){
+  const canvas=document.getElementById('scatter-canvas');
+  const wrap=document.getElementById('scatter-wrap');
+  if(!canvas||!wrap||!matrixData.length)return;
+
+  const catMap={};
+  matrixData.forEach(d=>{
+    const key=d.inferredEs;
+    if(!catMap[key]){catMap[key]={name:d.inferredEs,spend:0,impact:0,risk:0,count:0,quadrant:d.quadrant};}
+    catMap[key].spend+=d.spend;catMap[key].impact+=d.impact;catMap[key].risk+=d.risk;catMap[key].count++;
+  });
+  const COLORS={strategic:'#2563eb',leverage:'#059669',bottleneck:'#d97706',noncritical:'#64748b'};
+  const plotData=Object.values(catMap).map(c=>{
+    const impact=Math.round(c.impact/c.count),risk=Math.round(c.risk/c.count);
+    const hi=impact>=5.5,hr=risk>=5.5;
+    const q=hi&&hr?'strategic':!hi&&hr?'bottleneck':hi&&!hr?'leverage':'noncritical';
+    return{...c,impact,risk,quadrant:q,color:COLORS[q]};
+  });
+
+  const W=wrap.offsetWidth||700,H=520,dpr=window.devicePixelRatio||1;
+  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+
+  const PAD={l:68,r:30,t:30,b:58},PW=W-PAD.l-PAD.r,PH=H-PAD.t-PAD.b;
+
+  [{x:0,y:.5,w:.5,h:.5,bg:'rgba(217,119,6,.07)',lbl:'Cuello de Botella',lc:'rgba(180,83,9,.45)'},
+   {x:.5,y:.5,w:.5,h:.5,bg:'rgba(37,99,235,.08)',lbl:'Estratégico',lc:'rgba(29,78,216,.45)'},
+   {x:0,y:0,w:.5,h:.5,bg:'rgba(100,116,139,.06)',lbl:'No Crítico',lc:'rgba(75,85,99,.35)'},
+   {x:.5,y:0,w:.5,h:.5,bg:'rgba(5,150,105,.07)',lbl:'Apalancamiento',lc:'rgba(4,120,87,.45)'}
+  ].forEach(q=>{
+    ctx.fillStyle=q.bg;ctx.fillRect(PAD.l+q.x*PW,PAD.t+(1-q.y-q.h)*PH,q.w*PW,q.h*PH);
+    ctx.font='bold 11px Segoe UI,sans-serif';ctx.fillStyle=q.lc;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(q.lbl.toUpperCase(),PAD.l+(q.x+q.w/2)*PW,PAD.t+(1-q.y-q.h/2)*PH);
+  });
+
+  ctx.strokeStyle='rgba(0,0,0,.06)';ctx.lineWidth=1;
+  [.25,.5,.75].forEach(f=>{ctx.beginPath();ctx.moveTo(PAD.l+f*PW,PAD.t);ctx.lineTo(PAD.l+f*PW,PAD.t+PH);ctx.stroke();ctx.beginPath();ctx.moveTo(PAD.l,PAD.t+f*PH);ctx.lineTo(PAD.l+PW,PAD.t+f*PH);ctx.stroke();});
+  ctx.strokeStyle='rgba(37,99,235,.2)';ctx.lineWidth=1.2;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(PAD.l+PW/2,PAD.t);ctx.lineTo(PAD.l+PW/2,PAD.t+PH);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(PAD.l,PAD.t+PH/2);ctx.lineTo(PAD.l+PW,PAD.t+PH/2);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.strokeStyle='rgba(30,58,95,.25)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(PAD.l,PAD.t);ctx.lineTo(PAD.l,PAD.t+PH);ctx.lineTo(PAD.l+PW,PAD.t+PH);ctx.stroke();
+
+  const maxSpend=Math.max(...plotData.map(d=>d.spend),1),minR=7,maxR=22;
+  const pts=plotData.map(d=>({...d,px:PAD.l+.05*PW+(d.spend/maxSpend)*PW*.9,py:PAD.t+PH-.05*PH-((d.risk-1)/9)*PH*.9,r:minR+(d.spend/maxSpend)*(maxR-minR)}));
+
+  const FS=10;ctx.font=`600 ${FS}px Segoe UI,sans-serif`;
+  const lbls=pts.map(p=>{const short=p.name.length>18?p.name.substring(0,17)+'…':p.name;const tw=ctx.measureText(short).width;return{p,short,tw,lx:p.px+p.r+4,ly:p.py-p.r-8,w:tw+8,h:FS+5};});
+  for(let it=0;it<40;it++){for(let i=0;i<lbls.length;i++){const a=lbls[i];for(let j=i+1;j<lbls.length;j++){const b=lbls[j];const ox=Math.abs(a.lx-b.lx)-(a.w/2+b.w/2+4),oy=Math.abs(a.ly-b.ly)-(a.h/2+b.h/2+4);if(ox<0&&oy<0){const dx=a.lx<b.lx?-1:1,dy=a.ly<b.ly?-1:1,push=3;a.lx+=dx*push;b.lx-=dx*push;if(Math.abs(oy)<Math.abs(ox)){a.ly+=dy*push;b.ly-=dy*push;}}}a.lx=Math.max(PAD.l+a.w/2+2,Math.min(W-PAD.r-a.w/2-2,a.lx));a.ly=Math.max(PAD.t+a.h/2+2,Math.min(H-PAD.b-2,a.ly));}}
+
+  lbls.forEach(({p,lx,ly})=>{ctx.strokeStyle=p.color+'66';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.px,p.py);ctx.lineTo(lx,ly);ctx.stroke();});
+
+  pts.forEach(p=>{ctx.shadowColor=p.color+'44';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(p.px,p.py,p.r,0,Math.PI*2);ctx.fillStyle=p.color+'dd';ctx.fill();ctx.strokeStyle=p.color;ctx.lineWidth=2;ctx.stroke();ctx.shadowBlur=0;if(p.r>=13){ctx.font=`bold ${Math.min(11,p.r-2)}px Segoe UI,sans-serif`;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.risk,p.px,p.py);}});
+
+  lbls.forEach(({short,lx,ly,w,h,p})=>{ctx.font=`600 ${FS}px Segoe UI,sans-serif`;const bx=lx-w/2,by=ly-h/2;ctx.fillStyle='rgba(255,255,255,.95)';if(ctx.roundRect)ctx.roundRect(bx,by,w,h,4);else ctx.rect(bx,by,w,h);ctx.fill();ctx.strokeStyle=p.color+'88';ctx.lineWidth=.8;ctx.stroke();ctx.fillStyle=p.color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(short,lx,ly);});
+
+  ctx.fillStyle='rgba(30,58,95,.45)';ctx.font='10px Segoe UI,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+  [0,.25,.5,.75,1].forEach(f=>ctx.fillText(fmt(f*maxSpend),PAD.l+.05*PW+f*PW*.9,PAD.t+PH+7));
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  [1,3,5,7,10].forEach(v=>ctx.fillText(v,PAD.l-7,PAD.t+PH-.05*PH-((v-1)/9)*PH*.9));
+  ctx.fillStyle='rgba(30,58,95,.6)';ctx.font='bold 10px Segoe UI,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText('GASTO ANUAL (€)',PAD.l+PW/2,H-4);
+  ctx.save();ctx.translate(13,PAD.t+PH/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('RIESGO & COMPLEJIDAD',0,0);ctx.restore();
+  canvas._pts=pts;
+}
+
+(function(){
+  let tip=null;
+  document.addEventListener('mousemove',e=>{
+    const canvas=document.getElementById('scatter-canvas');
+    if(!canvas||!canvas._pts)return;
+    const rect=canvas.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    let hit=null;for(const p of canvas._pts){if(Math.sqrt((mx-p.px)**2+(my-p.py)**2)<=p.r+4){hit=p;break;}}
+    if(tip){tip.remove();tip=null;}
+    if(hit){
+      tip=document.createElement('div');
+      tip.style.cssText='position:fixed;background:#fff;border:1px solid #b8d0e8;border-radius:8px;padding:10px 13px;font-size:.78rem;color:#1e3a5f;pointer-events:none;z-index:999;box-shadow:0 4px 20px rgba(30,58,95,.15);max-width:200px;';
+      const qL={strategic:'Estratégico',leverage:'Apalancamiento',bottleneck:'Cuello de Botella',noncritical:'No Crítico'};
+      tip.innerHTML=`<div style="font-weight:700;margin-bottom:5px">${hit.name}</div><div style="color:#4a6fa5;margin-bottom:3px">Gasto: <strong>${fmt(hit.spend)}</strong></div><div style="color:#4a6fa5;margin-bottom:6px">Riesgo: <strong>${hit.risk}/10</strong></div><span style="background:${hit.color}18;color:${hit.color};padding:2px 8px;border-radius:8px;font-size:.7rem;font-weight:700">${qL[hit.quadrant]}</span>`;
+      document.body.appendChild(tip);tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-10)+'px';
+    }
+  });
+  document.addEventListener('mouseleave',()=>{if(tip){tip.remove();tip=null;}});
+})();
+
+function renderRecommendations(){
+  const RECS={
+    strategic:{c:'rec-strategic',i:'⭐',t:'Estratégico',col:'#1d4ed8',r:[['Desarrollar alianzas estratégicas a largo plazo con proveedores clave','urgent'],['Implementar planes de continuidad de suministro (BCP)','urgent'],['Evaluar integración vertical o acuerdos de co-inversión','short'],['Negociar contratos plurianuales con cláusulas de revisión','mid']]},
+    leverage:{c:'rec-leverage',i:'💪',t:'Apalancamiento',col:'#065f46',r:[['Consolidar volúmenes para obtener mejores precios','short'],['Desarrollar base de proveedores alternativa','short'],['Implementar subastas inversas y RFQ competitivos','mid'],['Aprovechar poder de negociación','short']]},
+    bottleneck:{c:'rec-bottleneck',i:'⚠️',t:'Cuello de Botella',col:'#92400e',r:[['Crear stock de seguridad para mitigar interrupciones','urgent'],['Buscar y homologar proveedores alternativos urgentemente','urgent'],['Establecer acuerdos de suministro garantizado','short'],['Implementar sistema de alerta temprana','short']]},
+    noncritical:{c:'rec-noncritical',i:'📦',t:'No Crítico',col:'#374151',r:[['Automatizar compras mediante catálogos y e-procurement','mid'],['Consolidar proveedores para reducir complejidad','mid'],['Simplificar procesos y reducir carga administrativa','mid'],['Revisar frecuencias de pedido y tamaños de lote','mid']]},
+  };
+  const bL={urgent:'Urgente',short:'Corto Plazo',mid:'Medio Plazo'};
+  const bC={urgent:'badge-urgent',short:'badge-short',mid:'badge-mid'};
+  document.getElementById('rec-grid').innerHTML=Object.entries(RECS).map(([q,r])=>{
+    const items=matrixData.filter(d=>d.quadrant===q);
+    const names=items.length?`<div style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px;">${items.map(i=>`<span style="background:${r.col}12;color:${r.col};border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:600">${i.name}</span>`).join('')}</div>`:`<div style="font-size:.73rem;color:var(--text2);margin-bottom:8px;font-style:italic">Sin categorías en este cuadrante</div>`;
+    return`<div class="rec-card ${r.c}"><div class="rec-title" style="color:${r.col}">${r.i} ${r.t}</div>${names}<ul class="rec-items">${r.r.map(([txt,b])=>`<li>${txt}<span class="action-badge ${bC[b]}">${bL[b]}</span></li>`).join('')}</ul></div>`;
+  }).join('');
+}
+
+function exportPNG(){html2canvas(document.getElementById('matrix-printable'),{backgroundColor:'#ffffff',scale:2}).then(c=>{const a=document.createElement('a');a.download=`Kraljic_${document.getElementById('client-name').value||'matrix'}.png`;a.href=c.toDataURL();a.click();});}
+function exportPDF(){html2canvas(document.getElementById('matrix-printable'),{backgroundColor:'#ffffff',scale:2}).then(c=>{const img=c.toDataURL('image/png'),pw=794,ph=Math.round(pw*(c.height/c.width)),w=window.open('','_blank');w.document.write(`<html><head><title>Kraljic – Elymar Estévez</title></head><body style="margin:0;background:#fff;"><img src="${img}" style="width:${pw}px;display:block;margin:0 auto;"><p style="text-align:center;font-family:sans-serif;font-size:11px;color:#888;margin-top:8px;">Matriz de Kraljic · Creado por Elymar Estévez</p></body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),600);});}
+
+function saveClient(){document.getElementById('modal-client-input').value=document.getElementById('client-name').value.trim();document.getElementById('modal-save').classList.add('open');}
+function confirmSave(){
+  const name=document.getElementById('modal-client-input').value.trim();
+  if(!name){alert('Introduce un nombre de cliente');return;}
+  clients[name]={name,sector:document.getElementById('sector-select').value,analyst:document.getElementById('analyst-name').value,date:document.getElementById('analysis-date').value,matrixData,inputMode};
+  try{localStorage.setItem('kraljic_clients',JSON.stringify(clients));}catch(e){}
+  closeModal();renderClientList();alert(`✅ Cliente "${name}" guardado.`);
+}
+function loadClients(){try{const r=localStorage.getItem('kraljic_clients');if(r)clients=JSON.parse(r);}catch(e){clients={};}renderClientList();}
+function renderClientList(){
+  const keys=Object.keys(clients);
+  const wrap=document.getElementById('client-list-wrap');
+  if(!keys.length){wrap.innerHTML='<div class="no-data">No hay clientes guardados aún.</div>';return;}
+  const sMap={manufactura:'Manufactura',retail:'Retail',salud:'Salud',it:'IT',construccion:'Construcción',servicios:'Servicios',alimentacion:'Alimentación',energia:'Energía'};
+  wrap.innerHTML=keys.map(k=>{const c=clients[k];return`<div class="client-item"><div><div class="client-name-lbl">🏢 ${c.name}</div><div class="client-meta">${sMap[c.sector]||c.sector} · ${c.date} · ${c.matrixData.length} elementos</div></div><div class="flex" style="gap:6px;"><button class="btn btn-primary btn-sm" onclick="loadClient('${k}')">Cargar</button><button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteClient('${k}')">✕</button></div></div>`;}).join('');
+}
+function loadClient(key){
+  const c=clients[key];if(!c)return;
+  document.getElementById('client-name').value=c.name;document.getElementById('sector-select').value=c.sector;document.getElementById('analyst-name').value=c.analyst||'Elymar Estévez';document.getElementById('analysis-date').value=c.date;
+  matrixData=c.matrixData;inputMode=c.inputMode||'category';
+  document.getElementById('cat-tbody').innerHTML='';matrixData.forEach(d=>addRow(d.name,d.spend));
+  renderMatrix();renderKPIs();renderScoreTable();renderRecommendations();showSection('matrix');setTimeout(()=>renderScatter(),150);
+}
+function deleteClient(key){if(!confirm(`¿Eliminar "${key}"?`))return;delete clients[key];try{localStorage.setItem('kraljic_clients',JSON.stringify(clients));}catch(e){}renderClientList();}
+function closeModal(){document.getElementById('modal-save').classList.remove('open');}
+function fmt(n){if(n>=1000000)return(n/1000000).toFixed(1)+'M€';if(n>=1000)return(n/1000).toFixed(0)+'K€';return n.toFixed(0)+'€';}
+</script>
+</body>
+</html>
